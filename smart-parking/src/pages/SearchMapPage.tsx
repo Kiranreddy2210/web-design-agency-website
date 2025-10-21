@@ -24,11 +24,8 @@ export function SearchMapPage() {
     <div className="grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto p-4">
       <div className="lg:col-span-2 order-2 lg:order-1">
         <div className="h-[60vh] rounded-lg overflow-hidden border">
-          <MapContainer center={center} zoom={13} scrollWheelZoom={true} className="h-full w-full">
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
+          <MapContainer {...({ center, zoom: 13, scrollWheelZoom: true, className: 'h-full w-full' } as any)}>
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             {locations.map((loc) => (
               <Marker key={loc.id} position={[loc.latitude, loc.longitude]}>
                 <Popup>

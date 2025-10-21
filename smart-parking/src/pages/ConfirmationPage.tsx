@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import type { Booking, Payment } from '../types';
+import type { Booking } from '../types';
 import QRCode from 'react-qr-code';
 
 export function ConfirmationPage() {
@@ -12,10 +12,11 @@ export function ConfirmationPage() {
     return parsed.id === bookingId ? parsed : null;
   }, [bookingId]);
 
-  const payment: Payment | null = useMemo(() => {
-    const raw = sessionStorage.getItem('lastPayment');
-    return raw ? (JSON.parse(raw) as Payment) : null;
-  }, []);
+  // Read payment if needed later
+  // const payment: Payment | null = useMemo(() => {
+  //   const raw = sessionStorage.getItem('lastPayment');
+  //   return raw ? (JSON.parse(raw) as Payment) : null;
+  // }, []);
 
   if (!booking) return <div className="max-w-xl mx-auto p-6">Booking not found.</div>;
 

@@ -1,4 +1,4 @@
-import { ref, set, get, onValue, update, push, remove, child } from 'firebase/database';
+import { ref, set, get, onValue, update, child } from 'firebase/database';
 import { db } from '../firebase';
 import type { ParkingLocation, Booking, AppUser } from '../types';
 

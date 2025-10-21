@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import React from 'react';
+// React import not needed due to automatic JSX runtime
 import { AppLayout } from './ui/AppLayout';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';

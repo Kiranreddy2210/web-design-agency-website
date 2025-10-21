@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { User, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
+import type { User } from 'firebase/auth';
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
 import { auth } from '../firebase';
 import type { AppUser, Role } from '../types';
 import { ref, get, set } from 'firebase/database';
@@ -9,6 +10,7 @@ interface AuthContextShape {
   firebaseUser: User | null;
   appUser: AppUser | null;
   loading: boolean;
+  isMock: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName?: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -30,8 +32,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mockMode, setMockMode] = useState(false);
+
+  // Helpers for mock mode persistence
+  const loadMockUser = (): AppUser | null => {
+    try {
+      const raw = localStorage.getItem('mockUser');
+      return raw ? (JSON.parse(raw) as AppUser) : null;
+    } catch {
+      return null;
+    }
+  };
+  const saveMockUser = (user: AppUser | null) => {
+    if (!user) {
+      localStorage.removeItem('mockUser');
+      return;
+    }
+    localStorage.setItem('mockUser', JSON.stringify(user));
+  };
 
   useEffect(() => {
+    if (!auth) {
+      setMockMode(true);
+      const existing = loadMockUser();
+      if (existing) setAppUser(existing);
+      setLoading(false);
+      return;
+    }
     const unsub = onAuthStateChanged(auth, async (u) => {
       setFirebaseUser(u);
       if (u) {
@@ -59,10 +86,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
+    if (!auth) {
+      const role: Role = email.toLowerCase().includes('admin') ? 'admin' : 'user';
+      const mock: AppUser = {
+        id: `mock-${role}-${email}`,
+        email,
+        displayName: email.split('@')[0],
+        role,
+        createdAt: new Date().toISOString(),
+      };
+      setAppUser(mock);
+      saveMockUser(mock);
+      return;
+    }
     await signInWithEmailAndPassword(auth, email, password);
   };
 
   const register = async (email: string, password: string, displayName?: string) => {
+    if (!auth) {
+      const mock: AppUser = {
+        id: `mock-user-${email}`,
+        email,
+        displayName,
+        role: 'user',
+        createdAt: new Date().toISOString(),
+      };
+      setAppUser(mock);
+      saveMockUser(mock);
+      return;
+    }
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     if (displayName) {
       await updateProfile(cred.user, { displayName });
@@ -72,10 +124,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    if (!auth) {
+      setAppUser(null);
+      saveMockUser(null);
+      return;
+    }
     await signOut(auth);
   };
 
-  const value = useMemo(() => ({ firebaseUser, appUser, loading, login, register, logout }), [firebaseUser, appUser, loading]);
+  const value = useMemo(() => ({ firebaseUser, appUser, loading, isMock: mockMode, login, register, logout }), [firebaseUser, appUser, loading, mockMode]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

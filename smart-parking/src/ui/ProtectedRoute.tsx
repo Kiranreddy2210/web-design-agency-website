@@ -3,14 +3,14 @@ import { useAuth } from '../hooks/useAuth';
 import type { Role } from '../types';
 
 export function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?: Role[] }) {
-  const { firebaseUser, appUser, loading } = useAuth();
+  const { appUser, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
     return <div className="p-6">Loading...</div>;
   }
 
-  if (!firebaseUser || !appUser) {
+  if (!appUser) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

@@ -7,4 +7,9 @@ export const firebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
+} as const;
+
+export function isFirebaseConfigured(): boolean {
+  // Minimal check: apiKey and projectId are required to initialize
+  return Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
+}
