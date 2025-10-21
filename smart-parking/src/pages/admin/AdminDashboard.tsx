@@ -1,50 +1,45 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { sampleLocations } from '../../services/mockData';
-import type { AnalyticsSnapshot } from '../../types';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 
 export function AdminDashboard() {
-  const [analytics, setAnalytics] = useState<AnalyticsSnapshot[]>([]);
-
-  useEffect(() => {
-    // mock analytics
-    const days = 7;
-    const data: AnalyticsSnapshot[] = Array.from({ length: days }).map((_, i) => ({
-      date: new Date(Date.now() - (days - i) * 86400000).toISOString().slice(0, 10),
-      totalBookings: Math.floor(20 + Math.random() * 50),
-      totalRevenue: Math.floor(5000 + Math.random() * 15000),
-      occupancyRate: Math.random(),
+  const chartData = useMemo(() => {
+    return Array.from({ length: 7 }).map((_, idx) => ({
+      day: `D${idx+1}`,
+      bookings: Math.floor(Math.random() * 40) + 10,
+      revenue: Math.floor(Math.random() * 5000) + 1000,
     }));
-    setAnalytics(data);
   }, []);
 
-  const totals = useMemo(() => {
-    return {
-      locations: sampleLocations.length,
-      slots: sampleLocations.reduce((sum, l) => sum + l.totalSlots, 0),
-      revenue: analytics.reduce((sum, a) => sum + a.totalRevenue, 0),
-    };
-  }, [analytics]);
+  const totalAvailable = sampleLocations.reduce((sum, l) => sum + l.slots.filter(s => !s.isOccupied && !s.isReserved).length, 0);
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <h2 className="text-2xl font-semibold">Admin Dashboard</h2>
       <div className="grid md:grid-cols-3 gap-4">
-        <div className="border rounded p-4"><div className="text-sm">Locations</div><div className="text-2xl font-semibold">{totals.locations}</div></div>
-        <div className="border rounded p-4"><div className="text-sm">Total Slots</div><div className="text-2xl font-semibold">{totals.slots}</div></div>
-        <div className="border rounded p-4"><div className="text-sm">Weekly Revenue</div><div className="text-2xl font-semibold">₹{totals.revenue}</div></div>
+        <div className="border rounded p-4"><div className="text-sm text-gray-600">Total Locations</div><div className="text-2xl font-semibold">{sampleLocations.length}</div></div>
+        <div className="border rounded p-4"><div className="text-sm text-gray-600">Available Slots</div><div className="text-2xl font-semibold">{totalAvailable}</div></div>
+        <div className="border rounded p-4"><div className="text-sm text-gray-600">Today's Revenue</div><div className="text-2xl font-semibold">₹{(Math.random()*10000).toFixed(0)}</div></div>
       </div>
-      <div className="border rounded p-4 h-80">
-        <div className="font-medium mb-2">Revenue (last 7 days)</div>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={analytics}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Line type="monotone" dataKey="totalRevenue" stroke="#2563eb" strokeWidth={2} />
-          </LineChart>
-        </ResponsiveContainer>
+      <div className="border rounded p-4">
+        <div className="font-medium mb-2">Weekly Bookings</div>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="day" />
+              <YAxis />
+              <Tooltip />
+              <Line type="monotone" dataKey="bookings" stroke="#2563eb" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+      <div className="flex gap-3">
+        <Link to="/admin/slots" className="px-4 py-2 border rounded">Manage Slots</Link>
+        <Link to="/admin/bookings" className="px-4 py-2 border rounded">Manage Bookings</Link>
+        <Link to="/admin/users" className="px-4 py-2 border rounded">Manage Users</Link>
       </div>
     </div>
   );

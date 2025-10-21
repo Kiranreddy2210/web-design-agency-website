@@ -1,6 +1,6 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { clsx } from 'clsx';
+import clsx from 'clsx';
 
 export function AppLayout() {
   const { appUser, logout } = useAuth();
